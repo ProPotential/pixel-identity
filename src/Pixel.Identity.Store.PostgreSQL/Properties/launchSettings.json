@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Pixel.Identity.Store.PostgreSQL": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:53924;http://localhost:53925"
+    }
+  }
+}
