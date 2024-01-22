@@ -35,7 +35,13 @@ public class Worker : IHostedService
         using var scope = this.serviceProvider.CreateScope();
 
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await context.Database.EnsureCreatedAsync();
+        //Apply migrations if autoMigrate configuration is enabled. In production, migrations should be applied
+        //using sql scripts provided with release. This can be handy to quickly spin a container or in dev / ci-cd environments
+        if (bool.TryParse(configuration["AutoMigrate"] ?? "false", out bool autoMigrate) && autoMigrate)
+        {
+            await context.Database.MigrateAsync();
+            logger.LogInformation("Entity framework migration was applied based on 'AutoMigrate' configuraation flag");
+        }      
 
         var applicationManager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
 
@@ -45,10 +51,11 @@ public class Worker : IHostedService
             {
                 await applicationManager.CreateAsync(new OpenIddictApplicationDescriptor
                 {
+                    ApplicationType = ApplicationTypes.Web,
                     ClientId = "pixel-identity-ui",
-                    ConsentType = ConsentTypes.Implicit,
-                    DisplayName = "Pixel Identity",
+                    ConsentType = ConsentTypes.Implicit,                   
                     ClientType = ClientTypes.Public,
+                    DisplayName = "Pixel Identity",
                     PostLogoutRedirectUris =
                 {
                     new Uri($"{configuration["IdentityHost"]}/authentication/logout-callback")
